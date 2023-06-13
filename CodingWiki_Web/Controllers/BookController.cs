@@ -3,6 +3,7 @@ using CodingWiki_Model.Models;
 using CodingWiki_Model.ViewModels;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.EntityFrameworkCore;
 
 namespace CodingWiki_Web.Controllers
 {
@@ -16,15 +17,15 @@ namespace CodingWiki_Web.Controllers
 
         public IActionResult Index()
         {
-            List<Book> objList = _db.Books.ToList();
-            foreach(var obj in objList)
-            {
+            List<Book> objList = _db.Books.Includ(u=>u.Publisher).ToList();
+            //foreach(var obj in objList)
+            //{
                 //least efficient 
                 //obj.Publisher = _db.Publishers.Find(obj.Publisher_Id);
                 
                 //most efficient 
-                _db.Entry(obj).Reference(u=>u.Publisher).Load();
-            }
+                //db.Entry(obj).Reference(u=>u.Publisher).Load();
+            //}
             return View(objList);
         }
 
@@ -82,8 +83,7 @@ namespace CodingWiki_Web.Controllers
 
             
             //edit
-            obj.Book = _db.Books.FirstOrDefault(u => u.Book_Id == id);
-            obj = _db.BookDetails.FirstOrDefault(u => u.Book_Id == id);
+            obj = _db.BookDetails.Include(u=>u.Book).FirstOrDefault(u => u.Book_Id == id);
             if (obj == null)
             {
                 return NotFound();
@@ -110,16 +110,49 @@ namespace CodingWiki_Web.Controllers
             return RedirectToAction(nameof(Index));
         }
 
-        public async Task<IActionResult> Delete(int id)
+        
+        public async Task<IActionResult> Playground()
         {
-            Book obj = new();
-            obj = _db.Books.FirstOrDefault(u => u.Book_Id == id);
-            if (obj == null)
-            {
-                return NotFound();
-            }
-            _db.Books.Remove(obj);
-            await _db.SaveChangesAsync();
+            //updating related data
+            var bookdetails1 = _db.BookDetails.Include(b=>b.Book).FirstOrDefault(b=>b.BookDetail_Id == 5);
+            bookdetails1.NumberOfChapters = 2222;
+            bookdetails1.Book.Price = 222;
+            _db.BookDetails.Update(bookdetails1);
+            _db.SaveChanges();
+
+            var bookdetails2 = _db.BookDetails.Include(b=>b.Book).FirstOrDefault(b=>b.BookDetail_Id == 5);
+            bookdetails2.NumberOfChapters = 1111;
+            bookdetails2.Book.Price = 111;
+            _db.BookDetails.Attach(bookdetails2);
+            _db.SaveChanges();
+
+
+            // IEnumerable<Book> BookList1 = _db.Books;
+            // var FilteredBook1 = BookList1.Where(b=>b.Price > 50).ToList();
+
+            // IEnumerable<Book> BookList2 = _db.Books;
+            // var FilteredBook2 = BookList2.Where(b=>b.Price > 50).ToList();
+            // var bookTemp = _db.Books.FirstOrDefault();
+            // bookTemp.Price = 100;
+
+            // var bookCollection = _db.Books;
+            // decimal totalPrice = 0;
+
+            // foreach(var book in bookCollection)
+            // {
+            //     totalPrice += book.Price;
+            // }
+
+            // var bookList = _db.Books.ToList();
+            // foreach (var book in bookList)
+            // {
+            //     totalPrice += book.Price;
+            // }
+
+            // var bookCollection2 = _db.Books;
+            // var bookCount1 = bookCollection2.Count();
+
+            // var bookCount2 = _db.Books.Count();
             return RedirectToAction(nameof(Index));
         }
     }
