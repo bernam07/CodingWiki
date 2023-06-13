@@ -1,0 +1,12 @@
+{
+  "ExpandedNodes": [
+    "",
+    "\\CodingWiki_Console",
+    "\\CodingWiki_DataAccess",
+    "\\CodingWiki_DataAccess\\Migrations",
+    "\\CodingWiki_Model",
+    "\\CodingWiki_Web"
+  ],
+  "SelectedNode": "\\CodingWiki_Console\\Program.cs",
+  "PreviewInSolutionExplorer": false
+}
