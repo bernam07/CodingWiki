@@ -17,14 +17,24 @@ namespace CodingWiki_Web.Controllers
 
         public IActionResult Index()
         {
-            List<Book> objList = _db.Books.Include(u=>u.Publisher).ToList();
-            //foreach(var obj in objList)
+            IQueryable<Book> objList = _db.Books.Include(u => u.Publisher)
+                .Include(u=>u.BookAuthors).ThenInclude(u=>u.Author);
+            
+            var temp = objList.Where(u=>u.Book_Id == 1).ToList();
+
+            //List<Book> objList = _db.Books.ToList();
+            //foreach (var obj in objList)
             //{
-                //least efficient 
-                //obj.Publisher = _db.Publishers.Find(obj.Publisher_Id);
-                
-                //most efficient 
-                //db.Entry(obj).Reference(u=>u.Publisher).Load();
+            //    least efficient
+            //obj.Publisher = _db.Publishers.Find(obj.Publisher_Id);
+
+            //    most efficient
+            //    _db.Entry(obj).Reference(u => u.Publisher).Load();
+            //    _db.Entry(obj).Collection(u => u.BookAuthors).Load();
+            //    foreach (var bookAuth in obj.BookAuthors)
+            //    {
+            //        _db.Entry(bookAuth).Reference(u => u.Author).Load();
+            //    }
             //}
             return View(objList);
         }
@@ -137,6 +147,7 @@ namespace CodingWiki_Web.Controllers
             return View(obj);
         }
 
+        [HttpPost]
         public IActionResult ManageAuthors(BookAuthorVM bookAuthorVM)
         {
             if (bookAuthorVM.BookAuthor.Book_Id != 0 && bookAuthorVM.BookAuthor.Author_Id != 0)
@@ -147,28 +158,53 @@ namespace CodingWiki_Web.Controllers
             return RedirectToAction(nameof(ManageAuthors), new { @id = bookAuthorVM.BookAuthor.Book_Id});
         }
 
-        
+        [HttpPost]
+        public IActionResult RemoveAuthors(int authorId,BookAuthorVM bookAuthorVM)
+        {
+            int bookId = bookAuthorVM.Book.Book_Id;
+            BookAuthorMap bookAuthorMap = _db.BookAuthors.FirstOrDefault(
+                u => u.Author_Id == authorId && u.Book_Id == bookId);
+
+            _db.BookAuthors.Remove(bookAuthorMap);
+            _db.SaveChanges();
+            return RedirectToAction(nameof(ManageAuthors), new { @id = bookAuthorVM.BookAuthor.Book_Id });
+        }
+
+
         public async Task<IActionResult> Playground()
         {
+            //view and sproc
+            var viewList = _db.MainBookDetails.ToList();
+            var viewList1 = _db.MainBookDetails.FirstOrDefault();
+            var viewList2 = _db.MainBookDetails.Where(u=>u.Price>30);
+
+            //raw sql
+            var bookRaw = _db.Books.FromSqlRaw("Select * from dbo.books").ToList();
+            var id = 1;
+            var bookRaw1 = _db.Books.FromSqlInterpolated($"Select * from dbo.books where bookid={id}").ToList();
+            //var bookRaw2 = _db.Books.FromSqlRaw($"Select * from dbo.books where bookid={0}", 1).ToList();
+
+            var booksproc = _db.Books.FromSqlInterpolated($"EXEC dbo.getAllBookDetails {id}").ToList();
+
             //updating related data
-            var bookdetails1 = _db.BookDetails.Include(b=>b.Book).FirstOrDefault(b=>b.BookDetail_Id == 5);
-            bookdetails1.NumberOfChapters = 2222;
-            bookdetails1.Book.Price = 222;
-            _db.BookDetails.Update(bookdetails1);
-            _db.SaveChanges();
+            //var bookdetails1 = _db.BookDetails.Include(b=>b.Book).FirstOrDefault(b=>b.BookDetail_Id == 5);
+            //bookdetails1.NumberOfChapters = 2222;
+            //bookdetails1.Book.Price = 222;
+            //_db.BookDetails.Update(bookdetails1);
+            //_db.SaveChanges();
 
-            var bookdetails2 = _db.BookDetails.Include(b=>b.Book).FirstOrDefault(b=>b.BookDetail_Id == 5);
-            bookdetails2.NumberOfChapters = 1111;
-            bookdetails2.Book.Price = 111;
-            _db.BookDetails.Attach(bookdetails2);
-            _db.SaveChanges();
+            //var bookdetails2 = _db.BookDetails.Include(b=>b.Book).FirstOrDefault(b=>b.BookDetail_Id == 5);
+            //bookdetails2.NumberOfChapters = 1111;
+            //bookdetails2.Book.Price = 111;
+            //_db.BookDetails.Attach(bookdetails2);
+            //_db.SaveChanges();
 
+            //IEnumerable<Book> BookList1 = _db.Books;
+            //var FilteredBook1 = BookList1.Where(b => b.Price > 50).ToList();
 
-            // IEnumerable<Book> BookList1 = _db.Books;
-            // var FilteredBook1 = BookList1.Where(b=>b.Price > 50).ToList();
+            //IQueryable<Book> BookList2 = _db.Books;
+            //var FilteredBook2 = BookList2.Where(b => b.Price > 50).ToList();
 
-            // IEnumerable<Book> BookList2 = _db.Books;
-            // var FilteredBook2 = BookList2.Where(b=>b.Price > 50).ToList();
             // var bookTemp = _db.Books.FirstOrDefault();
             // bookTemp.Price = 100;
 

@@ -14,6 +14,7 @@ namespace CodingWiki_DataAccess.Data
     public class ApplicationDbContext : DbContext
     {
         public DbSet<Book> Books { get; set; }
+        public DbSet<MainBookDetails> MainBookDetails { get; set; }
         public DbSet<Category> Categories { get; set; }
         public DbSet<Author> Authors { get; set; }
         public DbSet<Publisher> Publishers { get; set; }
@@ -68,6 +69,7 @@ namespace CodingWiki_DataAccess.Data
                 new Publisher { Publisher_Id = 3, Name = "Pub 3 Ben", Location = "Hawaii" }
                 );
 
+            modelBuilder.Entity<MainBookDetails>().HasNoKey().ToView("GetOnlyBookDetails");
         }
     }
 }
